@@ -8,8 +8,9 @@ dotenv.config();
 const join = (req, res) => {
   const { email, password } = req.body;
   const sql = "INSERT INTO users (email, password) VALUES (?,?);";
+  const values = [email, password];
 
-  conn.query(sql, [email, password], (err, results) => {
+  conn.query(sql, values, (err, results) => {
     if (err) {
       console.error(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
@@ -65,7 +66,7 @@ const passwordResetRequest = (req, res) => {
     const user = results[0];
 
     if (user) {
-      return res.status(StatusCodes.OK).end();
+      return res.status(StatusCodes.OK).json({ email, message: "비밀번호 초기화 가능합니다." });
     }
 
     return res.status(StatusCodes.UNAUTHORIZED).json({ message: "가입된 이메일이 아닙니다." });
@@ -73,7 +74,22 @@ const passwordResetRequest = (req, res) => {
 };
 
 const passwordReset = (req, res) => {
-  res.json("비밀번호 초기화");
+  const { email, password } = req.body;
+  const sql = "UPDATE users SET password = ? WHERE email = ?";
+  const values = [password, email];
+
+  conn.query(sql, values, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    }
+
+    if (results.affectedRows == 0) {
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    }
+
+    res.status(StatusCodes.OK).json({ message: "비밀번호가 변경되었습니다." });
+  });
 };
 
 module.exports = { join, login, passwordResetRequest, passwordReset };
