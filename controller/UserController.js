@@ -6,13 +6,19 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
+const makeSalt = () => {
+  return crypto.randomBytes(10).toString("base64");
+};
+
+const makeHash = (password, salt) => {
+  return crypto.pbkdf2Sync(password.toString(), salt, 10000, 10, "sha512").toString("base64");
+};
+
 const join = (req, res) => {
   const { email, password } = req.body;
 
-  const salt = crypto.randomBytes(10).toString("base64");
-  const hashPassword = crypto
-    .pbkdf2Sync(password.toString(), salt, 10000, 10, "sha512")
-    .toString("base64");
+  const salt = makeSalt();
+  const hashPassword = makeHash(password, salt);
 
   const sql = "INSERT INTO users (email, password, salt) VALUES (?,?,?);";
   const values = [email, hashPassword, salt];
@@ -37,10 +43,7 @@ const login = (req, res) => {
     }
 
     const user = results[0];
-    console.log(user);
-    const hashPassword = crypto
-      .pbkdf2Sync(password.toString(), user.salt, 10000, 10, "sha512")
-      .toString("base64");
+    const hashPassword = makeHash(password, user.salt);
 
     if (user && user.password == hashPassword) {
       const token = jwt.sign(
@@ -88,10 +91,8 @@ const passwordReset = (req, res) => {
   // 본인 인증 과정 필요
   const { email, password } = req.body;
 
-  const salt = crypto.randomBytes(10).toString("base64");
-  const hashPassword = crypto
-    .pbkdf2Sync(password.toString(), salt, 10000, 10, "sha512")
-    .toString("base64");
+  const salt = makeSalt();
+  const hashPassword = makeHash(password, salt);
 
   const sql = "UPDATE users SET password = ?, salt = ? WHERE email = ?";
   const values = [hashPassword, salt, email];
