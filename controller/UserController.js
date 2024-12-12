@@ -10,7 +10,9 @@ const join = (req, res) => {
   const { email, password } = req.body;
 
   const salt = crypto.randomBytes(10).toString("base64");
-  const hashPassword = crypto.pbkdf2Sync(password, salt, 10000, 10, "sha512").toString("base64");
+  const hashPassword = crypto
+    .pbkdf2Sync(password.toString(), salt, 10000, 10, "sha512")
+    .toString("base64");
 
   const sql = "INSERT INTO users (email, password, salt) VALUES (?,?,?);";
   const values = [email, hashPassword, salt];
@@ -35,8 +37,12 @@ const login = (req, res) => {
     }
 
     const user = results[0];
+    console.log(user);
+    const hashPassword = crypto
+      .pbkdf2Sync(password.toString(), user.salt, 10000, 10, "sha512")
+      .toString("base64");
 
-    if (user && user.password == password) {
+    if (user && user.password == hashPassword) {
       const token = jwt.sign(
         {
           email: user.email,
