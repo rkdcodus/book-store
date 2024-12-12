@@ -53,7 +53,23 @@ const login = (req, res) => {
 };
 
 const passwordResetRequest = (req, res) => {
-  res.json("비밀번호 초기화 요청");
+  const { email } = req.body;
+  const sql = "SELECT * FROM users WHERE email = ?";
+
+  conn.query(sql, email, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    }
+
+    const user = results[0];
+
+    if (user) {
+      return res.status(StatusCodes.OK).end();
+    }
+
+    return res.status(StatusCodes.UNAUTHORIZED).json({ message: "가입된 이메일이 아닙니다." });
+  });
 };
 
 const passwordReset = (req, res) => {
