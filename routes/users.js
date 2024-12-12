@@ -31,7 +31,15 @@ router.post(
   join
 );
 
-router.post("/login", login);
+router.post(
+  "/login",
+  [
+    body("email").notEmpty().isEmail().withMessage("이메일 입력 필요"),
+    body("password").notEmpty().withMessage("비밀번호 입력 필요"),
+    validator,
+  ],
+  login
+);
 router.post("/reset", passwordResetRequest);
 router.put("/reset", passwordReset);
 
