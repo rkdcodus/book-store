@@ -40,7 +40,11 @@ router.post(
   ],
   login
 );
-router.post("/reset", passwordResetRequest);
+router.post(
+  "/reset",
+  [body("email").notEmpty().isEmail().withMessage("이메일 입력 필요"), validator],
+  passwordResetRequest
+);
 router.put("/reset", passwordReset);
 
 module.exports = router;
