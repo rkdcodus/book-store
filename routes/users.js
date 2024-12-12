@@ -45,6 +45,14 @@ router.post(
   [body("email").notEmpty().isEmail().withMessage("이메일 입력 필요"), validator],
   passwordResetRequest
 );
-router.put("/reset", passwordReset);
+router.put(
+  "/reset",
+  [
+    body("email").notEmpty().isEmail().withMessage("이메일 입력 필요"),
+    body("password").notEmpty().withMessage("비밀번호 입력 필요"),
+    validator,
+  ],
+  passwordReset
+);
 
 module.exports = router;
