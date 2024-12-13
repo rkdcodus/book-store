@@ -15,7 +15,7 @@ const getBooks = (req, res) => {
   }
 
   const sql =
-    "SELECT books.id, category as category, title, form, author, isbn, pages, summary, detail, contents, price, pub_date FROM bookstore.books LEFT OUTER JOIN categories ON books.category_id = categories.id;";
+    "SELECT books.id, category as category, title, form, author, isbn, pages, summary, detail, contents, price, pub_date, img FROM bookstore.books LEFT OUTER JOIN categories ON books.category_id = categories.id;";
 
   conn.query(sql, category, (err, results) => {
     if (err) {
@@ -30,7 +30,7 @@ const getBooks = (req, res) => {
 const getBook = (req, res) => {
   const { bookId } = req.params;
   const sql =
-    "SELECT books.id, category as category, title, form, author, isbn, pages, summary, detail, contents, price, pub_date FROM bookstore.books LEFT OUTER JOIN categories ON books.category_id = categories.id WHERE books.id = ?";
+    "SELECT books.id, category as category, title, form, author, isbn, pages, summary, detail, contents, price, pub_date, img FROM bookstore.books LEFT OUTER JOIN categories ON books.category_id = categories.id WHERE books.id = ?";
 
   conn.query(sql, bookId, (err, results) => {
     if (err) {
