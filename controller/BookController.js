@@ -27,7 +27,21 @@ const getBooks = (req, res) => {
 };
 
 const getBook = (req, res) => {
-  res.json("도서 개별 조회");
+  const { bookId } = req.params;
+  const sql = "SELECT * FROM books WHERE id = ?";
+
+  conn.query(sql, bookId, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    }
+
+    if (!results.length) {
+      return res.status(StatusCodes.NOT_FOUND).end();
+    }
+
+    res.status(StatusCodes.OK).json(results);
+  });
 };
 
 module.exports = { getBooks, getBook };
