@@ -6,7 +6,7 @@ const getBooks = (req, res) => {
   const { category, news, limit, currentPage } = req.query;
   let sqlQuery = [];
   let sql =
-    "SELECT books.id, category as category, title, form, author, isbn, pages, summary, detail, contents, price, pub_date, img FROM bookstore.books LEFT OUTER JOIN categories ON books.category_id = categories.id ";
+    "SELECT books.id, category as category, title, form, author, isbn, pages, summary, detail, contents, price, pub_date, img, (SELECT count(*) FROM likes WHERE book_id = books.id) AS likes FROM bookstore.books LEFT OUTER JOIN categories ON books.category_id = categories.id ";
 
   if (!querySize) {
     conn.query(sql, (err, results) => {
@@ -36,7 +36,7 @@ const getBooks = (req, res) => {
 const getBook = (req, res) => {
   const { bookId } = req.params;
   const sql =
-    "SELECT books.id, category as category, title, form, author, isbn, pages, summary, detail, contents, price, pub_date, img FROM bookstore.books LEFT OUTER JOIN categories ON books.category_id = categories.id WHERE books.id = ?";
+    "SELECT books.id, category as category, title, form, author, isbn, pages, summary, detail, contents, price, pub_date, img, (SELECT count(*) FROM likes WHERE book_id = books.id) AS likes FROM bookstore.books LEFT OUTER JOIN categories ON books.category_id = categories.id WHERE books.id = ?";
 
   conn.query(sql, bookId, (err, results) => {
     if (err) {
