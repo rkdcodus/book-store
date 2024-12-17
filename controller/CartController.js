@@ -1,9 +1,18 @@
-const { Result } = require("express-validator");
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 
 const selectBooks = (req, res) => {
-  res.json("장바구니에서 도서 선택하기 ");
+  const { userId, selectedOrders } = req.body;
+  const sql = "UPDATE orders SET selected = 1 WHERE user_id = ? AND id IN (?) ";
+
+  conn.query(sql, [userId, selectedOrders], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    }
+
+    res.status(StatusCodes.OK).json({ message: "장바구니에서 도서 선택되었습니다." });
+  });
 };
 
 const getCarts = (req, res) => {
@@ -12,7 +21,8 @@ const getCarts = (req, res) => {
                 FROM orders 
                 LEFT JOIN books 
                 ON orders.book_id = books.id 
-                WHERE user_id = ?`;
+                WHERE user_id = ? 
+                AND orders.selected = 1`;
 
   conn.query(sql, userId, (err, results) => {
     if (err) {
