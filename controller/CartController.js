@@ -39,7 +39,17 @@ const addToCart = (req, res) => {
 };
 
 const removeBookFromCart = (req, res) => {
-  res.json("장바구니 도서 삭제");
+  const { orderId } = req.params;
+  const sql = "DELETE FROM orders WHERE id = ?";
+
+  conn.query(sql, orderId, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    }
+
+    res.status(StatusCodes.CREATED).json({ message: `${orderId} 상품이 삭제되었습니다.` });
+  });
 };
 
 module.exports = { selectBooks, getCarts, addToCart, removeBookFromCart };
