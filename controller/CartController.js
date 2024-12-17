@@ -22,7 +22,7 @@ const getCarts = (req, res) => {
                 LEFT JOIN books 
                 ON orders.book_id = books.id 
                 WHERE user_id = ? 
-                AND orders.selected = 1`;
+                `;
 
   conn.query(sql, userId, (err, results) => {
     if (err) {
