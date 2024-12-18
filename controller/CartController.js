@@ -3,7 +3,12 @@ const { StatusCodes } = require("http-status-codes");
 
 const selectBooks = (req, res) => {
   const { userId, selectedOrders } = req.body;
-  const sql = "UPDATE orders SET selected = 1 WHERE user_id = ? AND id IN (?) ";
+  const sql = ` SELECT orders.id as orderId, books.id as bookId, title, summary, price, quantity 
+                FROM orders 
+                LEFT JOIN books 
+                ON orders.book_id = books.id
+                WHERE user_id = ? 
+                AND orders.id IN(?)`;
 
   conn.query(sql, [userId, selectedOrders], (err, results) => {
     if (err) {
@@ -11,7 +16,7 @@ const selectBooks = (req, res) => {
       return res.status(StatusCodes.BAD_REQUEST).end();
     }
 
-    res.status(StatusCodes.OK).json({ message: "장바구니에서 도서 선택되었습니다." });
+    res.status(StatusCodes.OK).json(results);
   });
 };
 

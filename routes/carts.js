@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.use(express.json());
 
-router.patch("/", selectBooks);
+router.get("/selected", selectBooks);
 router.get("/", getCarts);
 router.post("/", addToCart);
 router.delete("/:orderId", removeBookFromCart);
