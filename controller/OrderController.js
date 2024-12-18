@@ -15,19 +15,21 @@ const createOrderSheets = (req, res) => {
       }
 
       // purchases 테이블 insert
-      orderIds.map((orderId) => {
-        conn.query(
-          "INSERT INTO purchases (order_id, order_sheets_id) VALUES (?,?)",
-          [orderId, results.insertId],
-          (err, results) => {
-            if (err) {
-              console.error(err);
-              return res.status(StatusCodes.BAD_REQUEST).end();
-            }
-            res.status(StatusCodes.CREATED).json(`${results.insertId} 번 주문서가 등록되었습니다.`);
+      const values = orderIds.reduce((acc, orderId) => {
+        return (acc = [...acc, [orderId, results.insertId]]);
+      }, []);
+
+      conn.query(
+        "INSERT INTO purchases (order_id, order_sheets_id) VALUES ?",
+        [values],
+        (err, results) => {
+          if (err) {
+            console.error(err);
+            return res.status(StatusCodes.BAD_REQUEST).end();
           }
-        );
-      });
+          res.status(StatusCodes.CREATED).json(`${results.insertId} 번 주문서가 등록되었습니다.`);
+        }
+      );
     }
   );
 
