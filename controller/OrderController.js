@@ -23,8 +23,25 @@ const createOrderSheets = async (req, res) => {
   }
 };
 
-const getOrderSheet = (req, res) => {
-  res.json("주문서 조회");
+const getOrderSheet = async (req, res) => {
+  const { userId } = req.params;
+  const purchaseSql =
+    "SELECT order_sheets_id FROM purchases WHERE order_id IN (SELECT id FROM orders WHERE user_id = ? AND selected = 1)";
+  const orderSheetsSql = "SELECT * FROM order_sheets WHERE id = ?";
+  const booksSql =
+    "SELECT books.id as bookId, title, summary, price, quantity FROM books LEFT JOIN orders ON books.id = orders.book_id WHERE books.id IN (SELECT book_id FROM orders WHERE user_id = ? AND selected = 1)";
+
+  try {
+    const [purchaseResult] = await conn.promise().query(purchaseSql, userId);
+    const orderSheetId = purchaseResult[0].order_sheets_id;
+    const [orderSheetResult] = await conn.promise().query(orderSheetsSql, orderSheetId);
+    const [booksResult] = await conn.promise().query(booksSql, userId);
+
+    res.status(StatusCodes.OK).json({ ...orderSheetResult[0], orders: booksResult });
+  } catch (err) {
+    console.error("error", err);
+    res.status(StatusCodes.BAD_REQUEST).json(err);
+  }
 };
 
 module.exports = { createOrderSheets, getOrderSheet };
