@@ -1,45 +1,26 @@
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 
-const createOrderSheets = (req, res) => {
+const createOrderSheets = async (req, res) => {
   const { orderSheet, orderIds } = req.body;
+  const orderSheetsSql =
+    "INSERT INTO order_sheets (address, receiver, contact, total_price) VALUES (?,?,?,?)";
+  const purchasesSql = "INSERT INTO purchases (order_id, order_sheets_id) VALUES ?";
+  const ordersSql = "UPDATE orders SET selected = 1 WHERE id IN (?) ";
 
-  // order_sheets 테이블 insert
-  conn.query(
-    "INSERT INTO order_sheets (address, receiver, contact, total_price) VALUES (?,?,?,?)",
-    [...Object.values(orderSheet)],
-    (err, results) => {
-      if (err) {
-        console.error(err);
-        return res.status(StatusCodes.BAD_REQUEST).end();
-      }
+  try {
+    // order_sheets 테이블 insert
+    const [results] = await conn.promise().query(orderSheetsSql, [...Object.values(orderSheet)]);
+    const values = orderIds.map((orderId) => [orderId, results.insertId]);
 
-      // purchases 테이블 insert
-      const values = orderIds.reduce((acc, orderId) => {
-        return (acc = [...acc, [orderId, results.insertId]]);
-      }, []);
+    await conn.promise().query(purchasesSql, [values]); // purchases 테이블 insert
+    await conn.promise().query(ordersSql, [orderIds]); // orders 테이블 selected 업데이트
 
-      conn.query(
-        "INSERT INTO purchases (order_id, order_sheets_id) VALUES ?",
-        [values],
-        (err, results) => {
-          if (err) {
-            console.error(err);
-            return res.status(StatusCodes.BAD_REQUEST).end();
-          }
-          res.status(StatusCodes.CREATED).json(`${results.insertId} 번 주문서가 등록되었습니다.`);
-        }
-      );
-    }
-  );
-
-  // orders 테이블 selected 업데이트
-  conn.query("UPDATE orders SET selected = 1 WHERE id IN (?) ", [orderIds], (err, results) => {
-    if (err) {
-      console.error(err);
-      return res.status(StatusCodes.BAD_REQUEST).end();
-    }
-  });
+    res.status(StatusCodes.CREATED).json(`${results.insertId} 번 주문서가 등록되었습니다.`);
+  } catch (err) {
+    console.error("error", err);
+    res.status(StatusCodes.BAD_REQUEST).json(err);
+  }
 };
 
 const getOrderSheet = (req, res) => {
