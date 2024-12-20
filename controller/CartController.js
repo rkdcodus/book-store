@@ -26,7 +26,8 @@ const getCarts = (req, res) => {
                 FROM orders 
                 LEFT JOIN books 
                 ON orders.book_id = books.id 
-                WHERE user_id = ? 
+                WHERE user_id = ?
+                AND orders.selected = 0; 
                 `;
 
   conn.query(sql, userId, (err, results) => {
