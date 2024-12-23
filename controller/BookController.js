@@ -1,5 +1,9 @@
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
+const jwt = require("jsonwebtoken");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 const getBooks = (req, res) => {
   const querySize = Object.keys(req.query).length;
@@ -35,11 +39,12 @@ const getBooks = (req, res) => {
 
 const getBook = (req, res) => {
   const { bookId } = req.params;
-  const { userId } = req.body;
+  const receivedJwt = req.headers["authorization"];
+  const decodedJwt = jwt.verify(receivedJwt, process.env.PRIVATE_KEY);
   const sql =
     "SELECT *, (SELECT count(*) FROM likes WHERE book_id = books.id) AS likes, (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND book_id = books.id)) as liked FROM bookstore.books LEFT OUTER JOIN categories ON books.category_id = categories.category_id WHERE books.id = ?";
 
-  conn.query(sql, [userId, bookId], (err, results) => {
+  conn.query(sql, [decodedJwt.id, bookId], (err, results) => {
     if (err) {
       console.error(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
