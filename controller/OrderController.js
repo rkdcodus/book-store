@@ -1,9 +1,6 @@
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
-const jwt = require("jsonwebtoken");
-const dotenv = require("dotenv");
-
-dotenv.config();
+const ensureAuthorization = require("./authorization");
 
 const createOrderSheets = async (req, res) => {
   const { orderSheet, orderIds } = req.body;
@@ -28,8 +25,7 @@ const createOrderSheets = async (req, res) => {
 };
 
 const getOrderSheet = async (req, res) => {
-  const receivedJwt = req.headers["authorization"];
-  const decodedJwt = jwt.verify(receivedJwt, process.env.PRIVATE_KEY);
+  const decodedJwt = ensureAuthorization(req);
   const purchaseSql =
     "SELECT order_sheets_id FROM purchases WHERE order_id IN (SELECT id FROM orders WHERE user_id = ? AND selected = 1)";
   const orderSheetsSql = "SELECT * FROM order_sheets WHERE id = ?";

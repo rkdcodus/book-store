@@ -1,14 +1,10 @@
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
-const jwt = require("jsonwebtoken");
-const dotenv = require("dotenv");
-
-dotenv.config();
+const ensureAuthorization = require("./authorization");
 
 const selectBooks = (req, res) => {
   const { selectedOrders } = req.body;
-  const receivedJwt = req.headers["authorization"];
-  const decodedJwt = jwt.verify(receivedJwt, process.env.PRIVATE_KEY);
+  const decodedJwt = ensureAuthorization(req);
   const sql = ` SELECT orders.id as orderId, books.id as bookId, title, summary, price, quantity 
                 FROM orders 
                 LEFT JOIN books 
@@ -27,8 +23,7 @@ const selectBooks = (req, res) => {
 };
 
 const getCarts = (req, res) => {
-  const receivedJwt = req.headers["authorization"];
-  const decodedJwt = jwt.verify(receivedJwt, process.env.PRIVATE_KEY);
+  const decodedJwt = ensureAuthorization(req);
   const sql = ` SELECT orders.id as orderId, book_id as bookId, selected, title, summary, price, quantity 
                 FROM orders 
                 LEFT JOIN books 
@@ -49,8 +44,7 @@ const getCarts = (req, res) => {
 
 const addToCart = (req, res) => {
   const { bookId, quantity } = req.body;
-  const receivedJwt = req.headers["authorization"];
-  const decodedJwt = jwt.verify(receivedJwt, process.env.PRIVATE_KEY);
+  const decodedJwt = ensureAuthorization(req);
   const sql = "INSERT INTO orders ( user_id, book_id, quantity) VALUES (?,?,?)";
 
   conn.query(sql, [decodedJwt.id, bookId, quantity], (err, results) => {

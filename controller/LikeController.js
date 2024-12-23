@@ -1,16 +1,11 @@
-const jwt = require("jsonwebtoken");
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
-const dotenv = require("dotenv");
-
-dotenv.config();
+const ensureAuthorization = require("./authorization");
 
 const addLike = (req, res) => {
   const sql = "INSERT INTO likes (user_id, book_id) VALUES (?, ?)";
   const { bookId } = req.params;
-
-  const receivedJwt = req.headers["authorization"];
-  const decodedJwt = jwt.verify(receivedJwt, process.env.PRIVATE_KEY);
+  const decodedJwt = ensureAuthorization(req);
 
   conn.query(sql, [decodedJwt.id, bookId], (err, results) => {
     if (err) {
@@ -25,9 +20,7 @@ const addLike = (req, res) => {
 const removeLike = (req, res) => {
   const sql = "DELETE FROM likes WHERE user_id = ? AND book_id = ?";
   const { bookId } = req.params;
-
-  const receivedJwt = req.headers["authorization"];
-  const decodedJwt = jwt.verify(receivedJwt, process.env.PRIVATE_KEY);
+  const decodedJwt = ensureAuthorization(req);
 
   conn.query(sql, [decodedJwt.id, bookId], (err, results) => {
     if (err) {
