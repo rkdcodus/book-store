@@ -32,6 +32,8 @@ const getOrderSheet = async (req, res) => {
     return res
       .status(StatusCodes.UNAUTHORIZED)
       .json({ message: "로그인 세션이 만료되었습니다. 다시 로그인 해주세요" });
+  } else if (decodedJwt instanceof JsonWebTokenError) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ message: "잘못된 토큰입니다." });
   }
 
   const purchaseSql =

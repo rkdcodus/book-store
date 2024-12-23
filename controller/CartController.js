@@ -11,6 +11,8 @@ const selectBooks = (req, res) => {
     return res
       .status(StatusCodes.UNAUTHORIZED)
       .json({ message: "로그인 세션이 만료되었습니다. 다시 로그인 해주세요" });
+  } else if (decodedJwt instanceof JsonWebTokenError) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ message: "잘못된 토큰입니다." });
   }
 
   const sql = ` SELECT orders.id as orderId, books.id as bookId, title, summary, price, quantity 
@@ -37,6 +39,8 @@ const getCarts = (req, res) => {
     return res
       .status(StatusCodes.UNAUTHORIZED)
       .json({ message: "로그인 세션이 만료되었습니다. 다시 로그인 해주세요" });
+  } else if (decodedJwt instanceof JsonWebTokenError) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ message: "잘못된 토큰입니다." });
   }
 
   const sql = ` SELECT orders.id as orderId, book_id as bookId, selected, title, summary, price, quantity 
@@ -65,6 +69,8 @@ const addToCart = (req, res) => {
     return res
       .status(StatusCodes.UNAUTHORIZED)
       .json({ message: "로그인 세션이 만료되었습니다. 다시 로그인 해주세요" });
+  } else if (decodedJwt instanceof JsonWebTokenError) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ message: "잘못된 토큰입니다." });
   }
 
   const sql = "INSERT INTO orders ( user_id, book_id, quantity) VALUES (?,?,?)";
