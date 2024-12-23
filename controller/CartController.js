@@ -1,10 +1,18 @@
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 const ensureAuthorization = require("./authorization");
+const { TokenExpiredError } = require("jsonwebtoken");
 
 const selectBooks = (req, res) => {
   const { selectedOrders } = req.body;
   const decodedJwt = ensureAuthorization(req, res);
+
+  if (decodedJwt instanceof TokenExpiredError) {
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ message: "로그인 세션이 만료되었습니다. 다시 로그인 해주세요" });
+  }
+
   const sql = ` SELECT orders.id as orderId, books.id as bookId, title, summary, price, quantity 
                 FROM orders 
                 LEFT JOIN books 
@@ -24,6 +32,13 @@ const selectBooks = (req, res) => {
 
 const getCarts = (req, res) => {
   const decodedJwt = ensureAuthorization(req, res);
+
+  if (decodedJwt instanceof TokenExpiredError) {
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ message: "로그인 세션이 만료되었습니다. 다시 로그인 해주세요" });
+  }
+
   const sql = ` SELECT orders.id as orderId, book_id as bookId, selected, title, summary, price, quantity 
                 FROM orders 
                 LEFT JOIN books 
@@ -45,6 +60,13 @@ const getCarts = (req, res) => {
 const addToCart = (req, res) => {
   const { bookId, quantity } = req.body;
   const decodedJwt = ensureAuthorization(req, res);
+
+  if (decodedJwt instanceof TokenExpiredError) {
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ message: "로그인 세션이 만료되었습니다. 다시 로그인 해주세요" });
+  }
+
   const sql = "INSERT INTO orders ( user_id, book_id, quantity) VALUES (?,?,?)";
 
   conn.query(sql, [decodedJwt.id, bookId, quantity], (err, results) => {

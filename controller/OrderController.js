@@ -1,6 +1,7 @@
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 const ensureAuthorization = require("./authorization");
+const { TokenExpiredError } = require("jsonwebtoken");
 
 const createOrderSheets = async (req, res) => {
   const { orderSheet, orderIds } = req.body;
@@ -26,6 +27,13 @@ const createOrderSheets = async (req, res) => {
 
 const getOrderSheet = async (req, res) => {
   const decodedJwt = ensureAuthorization(req, res);
+
+  if (decodedJwt instanceof TokenExpiredError) {
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ message: "로그인 세션이 만료되었습니다. 다시 로그인 해주세요" });
+  }
+
   const purchaseSql =
     "SELECT order_sheets_id FROM purchases WHERE order_id IN (SELECT id FROM orders WHERE user_id = ? AND selected = 1)";
   const orderSheetsSql = "SELECT * FROM order_sheets WHERE id = ?";
