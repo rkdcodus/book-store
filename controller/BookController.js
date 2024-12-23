@@ -36,7 +36,7 @@ const getBooks = (req, res) => {
 
 const getBook = (req, res) => {
   const { bookId } = req.params;
-  const decodedJwt = ensureAuthorization(req);
+  const decodedJwt = ensureAuthorization(req, res);
   const sql =
     "SELECT *, (SELECT count(*) FROM likes WHERE book_id = books.id) AS likes, (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND book_id = books.id)) as liked FROM bookstore.books LEFT OUTER JOIN categories ON books.category_id = categories.category_id WHERE books.id = ?";
 

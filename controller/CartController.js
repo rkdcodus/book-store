@@ -4,7 +4,7 @@ const ensureAuthorization = require("./authorization");
 
 const selectBooks = (req, res) => {
   const { selectedOrders } = req.body;
-  const decodedJwt = ensureAuthorization(req);
+  const decodedJwt = ensureAuthorization(req, res);
   const sql = ` SELECT orders.id as orderId, books.id as bookId, title, summary, price, quantity 
                 FROM orders 
                 LEFT JOIN books 
@@ -23,7 +23,7 @@ const selectBooks = (req, res) => {
 };
 
 const getCarts = (req, res) => {
-  const decodedJwt = ensureAuthorization(req);
+  const decodedJwt = ensureAuthorization(req, res);
   const sql = ` SELECT orders.id as orderId, book_id as bookId, selected, title, summary, price, quantity 
                 FROM orders 
                 LEFT JOIN books 
@@ -44,7 +44,7 @@ const getCarts = (req, res) => {
 
 const addToCart = (req, res) => {
   const { bookId, quantity } = req.body;
-  const decodedJwt = ensureAuthorization(req);
+  const decodedJwt = ensureAuthorization(req, res);
   const sql = "INSERT INTO orders ( user_id, book_id, quantity) VALUES (?,?,?)";
 
   conn.query(sql, [decodedJwt.id, bookId, quantity], (err, results) => {

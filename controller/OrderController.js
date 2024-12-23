@@ -25,7 +25,7 @@ const createOrderSheets = async (req, res) => {
 };
 
 const getOrderSheet = async (req, res) => {
-  const decodedJwt = ensureAuthorization(req);
+  const decodedJwt = ensureAuthorization(req, res);
   const purchaseSql =
     "SELECT order_sheets_id FROM purchases WHERE order_id IN (SELECT id FROM orders WHERE user_id = ? AND selected = 1)";
   const orderSheetsSql = "SELECT * FROM order_sheets WHERE id = ?";

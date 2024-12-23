@@ -5,7 +5,7 @@ const ensureAuthorization = require("./authorization");
 const addLike = (req, res) => {
   const sql = "INSERT INTO likes (user_id, book_id) VALUES (?, ?)";
   const { bookId } = req.params;
-  const decodedJwt = ensureAuthorization(req);
+  const decodedJwt = ensureAuthorization(req, res);
 
   conn.query(sql, [decodedJwt.id, bookId], (err, results) => {
     if (err) {
@@ -20,7 +20,7 @@ const addLike = (req, res) => {
 const removeLike = (req, res) => {
   const sql = "DELETE FROM likes WHERE user_id = ? AND book_id = ?";
   const { bookId } = req.params;
-  const decodedJwt = ensureAuthorization(req);
+  const decodedJwt = ensureAuthorization(req, res);
 
   conn.query(sql, [decodedJwt.id, bookId], (err, results) => {
     if (err) {
