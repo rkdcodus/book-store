@@ -1,5 +1,9 @@
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
+const jwt = require("jsonwebtoken");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 const createOrderSheets = async (req, res) => {
   const { orderSheet, orderIds } = req.body;
@@ -24,7 +28,8 @@ const createOrderSheets = async (req, res) => {
 };
 
 const getOrderSheet = async (req, res) => {
-  const { userId } = req.params;
+  const receivedJwt = req.headers["authorization"];
+  const decodedJwt = jwt.verify(receivedJwt, process.env.PRIVATE_KEY);
   const purchaseSql =
     "SELECT order_sheets_id FROM purchases WHERE order_id IN (SELECT id FROM orders WHERE user_id = ? AND selected = 1)";
   const orderSheetsSql = "SELECT * FROM order_sheets WHERE id = ?";
@@ -32,10 +37,10 @@ const getOrderSheet = async (req, res) => {
     "SELECT books.id as bookId, title, summary, price, quantity FROM books LEFT JOIN orders ON books.id = orders.book_id WHERE books.id IN (SELECT book_id FROM orders WHERE user_id = ? AND selected = 1)";
 
   try {
-    const [purchaseResult] = await conn.promise().query(purchaseSql, userId);
+    const [purchaseResult] = await conn.promise().query(purchaseSql, decodedJwt.id);
     const orderSheetId = purchaseResult[0].order_sheets_id;
     const [orderSheetResult] = await conn.promise().query(orderSheetsSql, orderSheetId);
-    const [booksResult] = await conn.promise().query(booksSql, userId);
+    const [booksResult] = await conn.promise().query(booksSql, decodedJwt.id);
 
     res.status(StatusCodes.OK).json({ ...orderSheetResult[0], orders: booksResult });
   } catch (err) {

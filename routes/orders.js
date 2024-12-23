@@ -5,6 +5,6 @@ const router = express.Router();
 router.use(express.json());
 
 router.post("/", createOrderSheets); // 주문서 등록하기(결제하기)
-router.get("/:userId", getOrderSheet); // 주문서 조회
+router.get("/", getOrderSheet); // 주문서 조회
 
 module.exports = router;
