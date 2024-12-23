@@ -1,8 +1,14 @@
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
+const jwt = require("jsonwebtoken");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 const selectBooks = (req, res) => {
-  const { userId, selectedOrders } = req.body;
+  const { selectedOrders } = req.body;
+  const receivedJwt = req.headers["authorization"];
+  const decodedJwt = jwt.verify(receivedJwt, process.env.PRIVATE_KEY);
   const sql = ` SELECT orders.id as orderId, books.id as bookId, title, summary, price, quantity 
                 FROM orders 
                 LEFT JOIN books 
@@ -10,7 +16,7 @@ const selectBooks = (req, res) => {
                 WHERE user_id = ? 
                 AND orders.id IN(?)`;
 
-  conn.query(sql, [userId, selectedOrders], (err, results) => {
+  conn.query(sql, [decodedJwt.id, selectedOrders], (err, results) => {
     if (err) {
       console.error(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
@@ -21,7 +27,8 @@ const selectBooks = (req, res) => {
 };
 
 const getCarts = (req, res) => {
-  const { userId } = req.body;
+  const receivedJwt = req.headers["authorization"];
+  const decodedJwt = jwt.verify(receivedJwt, process.env.PRIVATE_KEY);
   const sql = ` SELECT orders.id as orderId, book_id as bookId, selected, title, summary, price, quantity 
                 FROM orders 
                 LEFT JOIN books 
@@ -30,7 +37,7 @@ const getCarts = (req, res) => {
                 AND orders.selected = 0; 
                 `;
 
-  conn.query(sql, userId, (err, results) => {
+  conn.query(sql, decodedJwt.id, (err, results) => {
     if (err) {
       console.error(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
@@ -41,10 +48,12 @@ const getCarts = (req, res) => {
 };
 
 const addToCart = (req, res) => {
-  const { userId, bookId, quantity } = req.body;
+  const { bookId, quantity } = req.body;
+  const receivedJwt = req.headers["authorization"];
+  const decodedJwt = jwt.verify(receivedJwt, process.env.PRIVATE_KEY);
   const sql = "INSERT INTO orders ( user_id, book_id, quantity) VALUES (?,?,?)";
 
-  conn.query(sql, [userId, bookId, quantity], (err, results) => {
+  conn.query(sql, [decodedJwt.id, bookId, quantity], (err, results) => {
     if (err) {
       console.error(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
