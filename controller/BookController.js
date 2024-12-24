@@ -3,20 +3,11 @@ const { StatusCodes } = require("http-status-codes");
 const ensureAuthorization = require("./authorization");
 const { TokenExpiredError, JsonWebTokenError } = require("jsonwebtoken");
 
-const getBooks = (req, res) => {
-  const querySize = Object.keys(req.query).length;
+const getBooks = async (req, res) => {
   const { category, news, limit, currentPage } = req.query;
   let sqlQuery = [];
   let sql =
     "SELECT *, (SELECT count(*) FROM likes WHERE book_id = books.id) AS likes FROM bookstore.books LEFT OUTER JOIN categories ON books.category_id = categories.category_id ";
-
-  if (!querySize) {
-    conn.query(sql, (err, results) => {
-      res.status(StatusCodes.OK).json(results);
-    });
-
-    return;
-  }
 
   if (category) sqlQuery.push(`books.category_id = ${category} `);
   if (news) sqlQuery.push("pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW() ");
@@ -25,14 +16,17 @@ const getBooks = (req, res) => {
 
   if (limit && currentPage) sql += `LIMIT ${+limit} OFFSET ${limit * (currentPage - 1)}`;
 
-  conn.query(sql, (err, results) => {
-    if (err) {
-      console.error(err);
-      return res.status(StatusCodes.BAD_REQUEST).end();
-    }
+  try {
+    const [BooksResults] = await conn.promise().query(sql);
+    const [PaginationResults] = await conn
+      .promise()
+      .query("SELECT count(*) as totalCount FROM books");
 
-    res.status(StatusCodes.OK).json(results);
-  });
+    res.status(StatusCodes.OK).json({ books: BooksResults, pagination: PaginationResults[0] });
+  } catch (err) {
+    console.error(err);
+    return res.status(StatusCodes.BAD_REQUEST).end();
+  }
 };
 
 const getBook = (req, res) => {
