@@ -1,7 +1,7 @@
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 const ensureAuthorization = require("./authorization");
-const { TokenExpiredError } = require("jsonwebtoken");
+const { TokenExpiredError, JsonWebTokenError } = require("jsonwebtoken");
 
 const getBooks = (req, res) => {
   const querySize = Object.keys(req.query).length;
@@ -38,6 +38,8 @@ const getBooks = (req, res) => {
 const getBook = (req, res) => {
   const { bookId } = req.params;
   const decodedJwt = ensureAuthorization(req, res);
+  let sql = "";
+  let values = [];
 
   if (decodedJwt instanceof TokenExpiredError) {
     return res
@@ -45,12 +47,18 @@ const getBook = (req, res) => {
       .json({ message: "로그인 세션이 만료되었습니다. 다시 로그인 해주세요" });
   } else if (decodedJwt instanceof JsonWebTokenError) {
     return res.status(StatusCodes.BAD_REQUEST).json({ message: "잘못된 토큰입니다." });
+  } else if (decodedJwt instanceof ReferenceError) {
+    sql =
+      "SELECT *, (SELECT count(*) FROM likes WHERE book_id = books.id) AS likes FROM bookstore.books LEFT OUTER JOIN categories ON books.category_id = categories.category_id WHERE books.id = ?";
+
+    values = [bookId];
+  } else {
+    sql =
+      "SELECT *, (SELECT count(*) FROM likes WHERE book_id = books.id) AS likes, (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND book_id = books.id)) as liked FROM bookstore.books LEFT OUTER JOIN categories ON books.category_id = categories.category_id WHERE books.id = ?";
+    values = [decodedJwt.id, bookId];
   }
 
-  const sql =
-    "SELECT *, (SELECT count(*) FROM likes WHERE book_id = books.id) AS likes, (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND book_id = books.id)) as liked FROM bookstore.books LEFT OUTER JOIN categories ON books.category_id = categories.category_id WHERE books.id = ?";
-
-  conn.query(sql, [decodedJwt.id, bookId], (err, results) => {
+  conn.query(sql, values, (err, results) => {
     if (err) {
       console.error(err);
       return res.status(StatusCodes.BAD_REQUEST).end();

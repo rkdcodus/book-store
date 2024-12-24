@@ -7,9 +7,13 @@ dotenv.config();
 const ensureAuthorization = (req, res) => {
   try {
     const receivedJwt = req.headers["authorization"];
-    const decodedJwt = jwt.verify(receivedJwt, process.env.PRIVATE_KEY);
 
-    return decodedJwt;
+    if (receivedJwt) {
+      const decodedJwt = jwt.verify(receivedJwt, process.env.PRIVATE_KEY);
+      return decodedJwt;
+    }
+
+    throw new ReferenceError("jwt is not defined");
   } catch (err) {
     console.log(err.name);
     console.log(err.message);
