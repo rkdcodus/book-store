@@ -62,7 +62,9 @@ const login = (req, res) => {
         httpOnly: true,
       });
 
-      return res.status(StatusCodes.OK).json({ message: "로그인 성공" });
+      return res
+        .status(StatusCodes.OK)
+        .json({ ...results[0], message: "로그인 성공", token: token });
     }
     return res.status(StatusCodes.UNAUTHORIZED).json({ message: "로그인 실패" });
   });
