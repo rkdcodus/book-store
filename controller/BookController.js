@@ -22,12 +22,10 @@ const getBooks = async (req, res) => {
       .promise()
       .query("SELECT count(*) as totalCount FROM books");
 
-    res
-      .status(StatusCodes.OK)
-      .json({
-        books: BooksResults,
-        pagination: { ...PaginationResults[0], currentPage: Number(currentPage) },
-      });
+    res.status(StatusCodes.OK).json({
+      books: BooksResults,
+      pagination: { ...PaginationResults[0], currentPage: Number(currentPage) },
+    });
   } catch (err) {
     console.error(err);
     return res.status(StatusCodes.BAD_REQUEST).end();
@@ -67,7 +65,7 @@ const getBook = (req, res) => {
       return res.status(StatusCodes.NOT_FOUND).end();
     }
 
-    res.status(StatusCodes.OK).json(results);
+    res.status(StatusCodes.OK).json(results[0]);
   });
 };
 
